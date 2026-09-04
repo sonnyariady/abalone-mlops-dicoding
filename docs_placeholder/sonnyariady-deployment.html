@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>sonnyariady-deployment</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 16px;
+    max-width: 900px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  }
+  .header {
+    background: #0ea5e9;
+    color: #0c4a6e;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header .dot { width: 14px; height: 14px; border-radius: 50%; background: #0c4a6e; }
+  .header h1 { font-size: 20px; font-weight: 700; }
+  .body { padding: 28px; }
+  .badge {
+    display: inline-block;
+    background: #064e3b;
+    color: #6ee7b7;
+    border: 1px solid #065f46;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  .ok { color: #4ade80; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+  td, th { text-align: left; padding: 10px 12px; border-bottom: 1px solid #334155; }
+  th { color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+  .mono { font-family: Consolas, monospace; color: #7dd3fc; }
+  .note {
+    margin-top: 22px;
+    background: #7c2d12;
+    border: 1px solid #c2410c;
+    color: #fed7aa;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .note b { color: #ffedd5; }
+  .steps { margin-top: 20px; }
+  .steps ol { margin-left: 20px; line-height: 2; font-size: 14px; color: #cbd5e1; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <span class="dot"></span>
+      <h1>sonnyariady-deployment — Screenshot Bukti Deployment Cloud</h1>
+    </div>
+    <div class="body">
+      <span class="badge">PROYEK AKHIR MLOPS · DICODING · USERNAME: SONNYARIADY</span>
+      <p style="font-size:15px; line-height:1.7;">
+        Sistem machine learning <span class="mono">abalone-age-prediction</span> berhasil
+        dijalankan pada environment cloud. Halaman ini adalah <b>placeholder</b> yang harus
+        diganti dengan screenshot asli web app Anda.
+      </p>
+      <table>
+        <tr><th>Item</th><th>Status</th></tr>
+        <tr><td>Web app model serving (Flask)</td><td class="ok">● Berjalan di cloud</td></tr>
+        <tr><td>Endpoint <span class="mono">GET /</span></td><td class="ok">● 200 OK</td></tr>
+        <tr><td>Endpoint <span class="mono">GET /health</span></td><td class="ok">● status: ok</td></tr>
+        <tr><td>Endpoint <span class="mono">POST /predict</span></td><td class="ok">● mengembalikan prediksi JSON</td></tr>
+        <tr><td>Endpoint <span class="mono">GET /metrics</span></td><td class="ok">● metrik Prometheus tersedia</td></tr>
+      </table>
+      <div class="steps">
+        <p style="font-size:14px; font-weight:600; color:#94a3b8;">Cara mengganti dengan screenshot asli:</p>
+        <ol>
+          <li>Deploy aplikasi ke <b>Railway</b> (atau Heroku) menggunakan <span class="mono">Dockerfile</span> yang tersedia.</li>
+          <li>Buka URL publik web app Anda, misalnya <span class="mono">https://sonnyariady-mlops.up.railway.app</span>.</li>
+          <li>Lakukan beberapa request ke <span class="mono">/predict</span> (bisa lewat <span class="mono">sonnyariady-testing.ipynb</span>).</li>
+          <li>Ambil screenshot browser (jendela penuh) dan simpan sebagai <b>sonnyariady-deployment.png</b> di root proyek.</li>
+        </ol>
+      </div>
+      <div class="note">
+        <b>Catatan:</b> placeholder ini hanya petunjuk visual. Sebelum mengirim submission,
+        ganti berkas <span class="mono">sonnyariady-deployment.png</span> dengan screenshot
+        asli web app yang berjalan di cloud Anda.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

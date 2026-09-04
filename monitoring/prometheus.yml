@@ -1,0 +1,19 @@
+# ============================================================
+# prometheus.yml - Konfigurasi Prometheus
+# Proyek Akhir MLOps - sonnyariady
+#
+# Prometheus mengumpulkan metrik dari endpoint /metrics pada
+# aplikasi model serving (Flask + prometheus_client).
+# ============================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "ml-serving-app"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["app:8080"]
+        labels:
+          application: "abalone-mlops"

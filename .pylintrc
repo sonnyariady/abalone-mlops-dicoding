@@ -1,0 +1,39 @@
+[MASTER]
+# Proyek Akhir MLOps - konfigurasi pylint (clean code)
+#
+# Catatan untuk skor yang sehat pada proyek TFX:
+#  - E0401/E1101 adalah false positive protobuf & modul yang di-load runtime
+#    oleh executor TFX (folder <username>-pipeline diimpor via sys.path).
+#  - E1101 dimatikan karena anggota proto/dsl (TrainArgs, PushDestination,
+#    tfx.dsl.components.base, dll.) dibangkitkan secara dinamis.
+#  - R0913/R0914 dinaikkan sedikit karena DAG pipeline memang membutuhkan
+#    banyak parameter/state (mengikuti gaya contoh resmi TFX).
+
+# Agar pylint dapat mengimpor modul ber-hyphen (sonnyariady-pipeline) dan
+# modul 'modules' seperti saat pipeline benar-benar dijalankan.
+init-hook='import sys, os; ROOT = os.getcwd(); sys.path.insert(0, os.path.join(ROOT, "sonnyariady-pipeline")); sys.path.insert(0, ROOT)'
+
+disable=
+    wrong-import-position,
+    wrong-import-order,
+    missing-module-docstring,
+    too-few-public-methods,
+    duplicate-code,
+    fixme,
+    import-outside-toplevel,
+    no-name-in-module,
+    c-extension-no-member,
+    no-member
+
+[REPORTS]
+score=yes
+
+[BASIC]
+# Nama folder submission ber-hyphen (sonnyariady-pipeline) sesuai ketentuan
+# Dicoding; nama modul normal boleh memakai underscore.
+module-rgx=^[a-z_][a-z0-9_\-]*$
+
+[DESIGN]
+max-args=8
+max-locals=25
+max-attributes=12

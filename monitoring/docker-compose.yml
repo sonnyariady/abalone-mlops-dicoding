@@ -1,0 +1,45 @@
+# ============================================================
+# docker-compose.yml - stack monitoring lokal
+# Proyek Akhir MLOps - sonnyariady
+#
+# Menjalankan aplikasi model serving + Prometheus + Grafana:
+#   docker compose -f monitoring/docker-compose.yml up --build
+#
+# URL:
+#   Aplikasi ML : http://localhost:8080
+#   Prometheus  : http://localhost:9090
+#   Grafana     : http://localhost:3000  (admin / admin)
+# ============================================================
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - MODEL_DIR=/app/serving_model
+
+  prometheus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/mlops-dashboard.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus

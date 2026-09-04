@@ -1,0 +1,33 @@
+# ============================================================
+# requirements.txt
+# Proyek Akhir - Machine Learning Operations (MLOps) - Dicoding
+# Username Dicoding: sonnyariady
+#
+# Catatan: gunakan Python 3.10 (TFX 1.14 membutuhkan Python >= 3.8, < 3.11).
+# Disarankan membuat virtual environment baru:
+#   python -m venv venv
+#   source venv/bin/activate        (Linux/macOS/Git Bash)
+#   venv\Scripts\activate           (Windows CMD)
+#   pip install -r requirements.txt
+# ============================================================
+
+# --- Stack TensorFlow Extended (TFX) ---
+tensorflow==2.13.1
+tensorflow-model-analysis==0.45.0
+tensorflow-transform==1.14.0
+tfx==1.14.0
+apache-beam[gcp]==2.50.0
+keras-tuner==1.4.6
+setuptools<71
+
+# --- Web app / model serving ---
+flask==3.0.3
+gunicorn==22.0.0
+prometheus-client==0.20.0
+requests==2.32.3
+
+# --- Notebook & pengembangan ---
+notebook==6.5.7
+ipykernel==6.29.4
+nbconvert==7.16.4
+pylint==3.2.6
