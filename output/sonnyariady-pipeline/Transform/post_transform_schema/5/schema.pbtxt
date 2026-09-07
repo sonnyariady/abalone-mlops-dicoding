@@ -1,0 +1,39 @@
+feature {
+  name: "Diameter_xf"
+  type: FLOAT
+}
+feature {
+  name: "Height_xf"
+  type: FLOAT
+}
+feature {
+  name: "Length_xf"
+  type: FLOAT
+}
+feature {
+  name: "Sex_xf"
+  type: INT
+  int_domain {
+    is_categorical: true
+  }
+}
+feature {
+  name: "Shell weight_xf"
+  type: FLOAT
+}
+feature {
+  name: "Shucked weight_xf"
+  type: FLOAT
+}
+feature {
+  name: "Viscera weight_xf"
+  type: FLOAT
+}
+feature {
+  name: "Whole weight_xf"
+  type: FLOAT
+}
+feature {
+  name: "label_xf"
+  type: INT
+}
