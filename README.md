@@ -166,7 +166,8 @@ Langkah deployment:
 
 ## 9. Tautan Web App Model Serving
 
-- **Tautan model serving / metadata endpoint:** `https://sonnyariady-mlops.up.railway.app/v1/models/abalone-model/metadata`
+- **Tautan model serving / metadata endpoint:** `https://abalone-mlops-dicoding-production.up.railway.app/v1/models/abalone-model/metadata`
+- **Tautan health check:** `https://abalone-mlops-dicoding-production.up.railway.app/health`
 - **Screenshot keberhasilan deployment:** `sonnyariady-deployment.png`
 
 ## 10. Hasil Monitoring
