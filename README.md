@@ -278,4 +278,5 @@ docker compose -f monitoring/docker-compose.yml up --build
 - Grafana: <http://localhost:3000> (admin/admin)
 
 ---
+*Terakhir diperbarui: 7 September 2026 - Arsitektur Resmi TensorFlow Serving C++ (Dicoding MLOps)*
 *Proyek Akhir — Machine Learning Operations (MLOps) — Dicoding · Username: sonnyariady*
