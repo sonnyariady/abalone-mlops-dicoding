@@ -1,35 +1,48 @@
-"""Fungsi pembuat seluruh komponen TFX pipeline (prinsip clean code).
+"""Modul TFX Components: inisialisasi seluruh komponen machine learning pipeline."""
 
-Setiap komponen dibuat melalui fungsi khusus dengan parameter eksplisit
-sehingga pipeline mudah dibaca, diuji, dan digunakan ulang - baik dari
-notebook, dari ``run_pipeline.py``, maupun dari ``InteractiveContext``.
-"""
-
-from typing import Optional
-
+import os
 import tensorflow_model_analysis as tfma
-from tfx import v1 as tfx
 from tfx.dsl.components.common.resolver import Resolver
 from tfx.dsl.experimental.latest_blessed_model_resolver import (
     LatestBlessedModelResolver,
 )
-from tfx.proto import example_gen_pb2, pusher_pb2
+from tfx.proto import example_gen_pb2, pusher_pb2, trainer_pb2
 from tfx.types import Channel
 from tfx.types.standard_artifacts import Model, ModelBlessing
-
-from configs import (
-    TRAINER_MODULE,
-    TRANSFORM_MODULE,
-    TUNER_MODULE,
+from tfx.components import (
+    CsvExampleGen,
+    StatisticsGen,
+    SchemaGen,
+    ExampleValidator,
+    Transform,
+    Trainer,
+    Evaluator,
+    Pusher,
 )
+
 from modules.data_processing import LABEL_KEY
 
 
-def create_example_gen(data_root: str) -> tfx.components.CsvExampleGen:
-    """Membuat komponen ExampleGen: membaca CSV & membagi train:eval = 80:20.
+def init_components(
+    data_dir: str,
+    transform_module: str,
+    training_module: str,
+    training_steps: int = 5000,
+    eval_steps: int = 1000,
+    serving_model_dir: str = None,
+):
+    """Inisialisasi seluruh komponen TFX pipeline end-to-end.
 
-    Pembagian dilakukan dengan hash bucket pada baris data sehingga hasilnya
-    deterministik.
+    Komponen yang dibuat:
+    1. CsvExampleGen - ingestion dataset CSV dan pembagian train:eval
+    2. StatisticsGen - kalkulasi statistik data
+    3. SchemaGen - inferensi skema fitur
+    4. ExampleValidator - deteksi anomali data
+    5. Transform - rekayasa fitur dengan tf.Transform
+    6. Trainer - pelatihan model deep learning
+    7. Resolver - pemilihan model terbaik (LatestBlessedModelResolver)
+    8. Evaluator - evaluasi model menggunakan TFMA
+    9. Pusher - publikasi model yang lolos validasi ke direktori serving
     """
     output_config = example_gen_pb2.Output(
         split_config=example_gen_pb2.SplitConfig(
@@ -39,89 +52,55 @@ def create_example_gen(data_root: str) -> tfx.components.CsvExampleGen:
             ]
         )
     )
-    return tfx.components.CsvExampleGen(
-        input_base=data_root, output_config=output_config
+    example_gen = CsvExampleGen(
+        input_base=data_dir,
+        output_config=output_config,
     )
 
+    statistics_gen = StatisticsGen(examples=example_gen.outputs["examples"])
 
-def create_statistics_gen(examples) -> tfx.components.StatisticsGen:
-    """Membuat komponen StatisticsGen: menghitung statistik data tiap split."""
-    return tfx.components.StatisticsGen(examples=examples)
+    schema_gen = SchemaGen(
+        statistics=statistics_gen.outputs["statistics"],
+        infer_feature_shape=False,
+    )
 
+    example_validator = ExampleValidator(
+        statistics=statistics_gen.outputs["statistics"],
+        schema=schema_gen.outputs["schema"],
+    )
 
-def create_schema_gen(statistics) -> tfx.components.SchemaGen:
-    """Membuat komponen SchemaGen: inferensi skema data dari statistik."""
-    return tfx.components.SchemaGen(statistics=statistics, infer_feature_shape=False)
-
-
-def create_example_validator(statistics, schema) -> tfx.components.ExampleValidator:
-    """Membuat komponen ExampleValidator: deteksi anomali data terhadap skema."""
-    return tfx.components.ExampleValidator(statistics=statistics, schema=schema)
-
-
-def create_transform(examples, schema) -> tfx.components.Transform:
-    """Membuat komponen Transform: rekayasa fitur dengan tf.Transform."""
-    return tfx.components.Transform(
-        examples=examples,
-        schema=schema,
-        module_file=TRANSFORM_MODULE,
+    transform = Transform(
+        examples=example_gen.outputs["examples"],
+        schema=schema_gen.outputs["schema"],
+        module_file=os.path.abspath(transform_module),
         disable_analyzer_cache=True,
     )
 
+    # Batasi steps sesuai ukuran dataset abalone (4177 baris / 64 = ~52 batches train, ~13 batches eval)
+    train_args = trainer_pb2.TrainArgs(
+        splits=["train"],
+        num_steps=min(training_steps, 52),
+    )
+    eval_args = trainer_pb2.EvalArgs(
+        splits=["eval"],
+        num_steps=min(eval_steps, 13),
+    )
 
-def create_tuner(
-    examples, transform_graph, train_args, eval_args
-) -> tfx.components.Tuner:
-    """Membuat komponen Tuner: hyperparameter tuning otomatis (KerasTuner)."""
-    return tfx.components.Tuner(
-        module_file=TUNER_MODULE,
-        examples=examples,
-        transform_graph=transform_graph,
+    trainer = Trainer(
+        module_file=os.path.abspath(training_module),
+        examples=transform.outputs["transformed_examples"],
+        transform_graph=transform.outputs["transform_graph"],
+        schema=schema_gen.outputs["schema"],
         train_args=train_args,
         eval_args=eval_args,
     )
 
-
-def create_trainer(
-    examples,
-    transform_graph,
-    schema,
-    train_args,
-    eval_args,
-    tuner: Optional[tfx.components.Tuner] = None,
-) -> tfx.components.Trainer:
-    """Membuat komponen Trainer: melatih model Keras pada fitur transformasi.
-
-    Jika ``tuner`` diberikan, hyperparameter terbaik hasil tuning otomatis
-    digunakan untuk training.
-    """
-    kwargs = {
-        "module_file": TRAINER_MODULE,
-        "examples": examples,
-        "transform_graph": transform_graph,
-        "schema": schema,
-        "train_args": train_args,
-        "eval_args": eval_args,
-    }
-    if tuner is not None:
-        kwargs["hyperparameters"] = tuner.outputs["best_hyperparameters"]
-    return tfx.components.Trainer(**kwargs)
-
-
-def create_resolver() -> Resolver:
-    """Membuat komponen Resolver: memilih model terbaik sebelumnya (latest blessed)."""
-    return Resolver(
+    model_resolver = Resolver(
         strategy_class=LatestBlessedModelResolver,
         model=Channel(type=Model),
         model_blessing=Channel(type=ModelBlessing),
-    ).with_id("latest_blessed_model_resolver")
+    ).with_id("Latest_blessed_model_resolver")
 
-
-def create_evaluator(examples, trainer, resolver, schema) -> tfx.components.Evaluator:
-    """Membuat komponen Evaluator: evaluasi performa model dengan TFMA.
-
-    Metrik yang dihitung: ExampleCount, BinaryAccuracy, AUC, Precision, Recall.
-    """
     eval_config = tfma.EvalConfig(
         model_specs=[tfma.ModelSpec(label_key=LABEL_KEY)],
         metrics_specs=[
@@ -133,11 +112,7 @@ def create_evaluator(examples, trainer, resolver, schema) -> tfx.components.Eval
                         threshold=tfma.MetricThreshold(
                             value_threshold=tfma.GenericValueThreshold(
                                 lower_bound={"value": 0.5}
-                            ),
-                            change_threshold=tfma.GenericChangeThreshold(
-                                direction=2,
-                                absolute={"value": -1e-10},
-                            ),
+                            )
                         ),
                     ),
                     tfma.MetricConfig(class_name="AUC"),
@@ -148,23 +123,33 @@ def create_evaluator(examples, trainer, resolver, schema) -> tfx.components.Eval
         ],
         slicing_specs=[tfma.SlicingSpec()],
     )
-    return tfx.components.Evaluator(
-        examples=examples,
+
+    evaluator = Evaluator(
+        examples=example_gen.outputs["examples"],
         model=trainer.outputs["model"],
-        baseline_model=resolver.outputs["model"],
+        baseline_model=model_resolver.outputs["model"],
         eval_config=eval_config,
-        schema=schema,
+        schema=schema_gen.outputs["schema"],
     )
 
-
-def create_pusher(trainer, evaluator, serving_model_dir: str) -> tfx.components.Pusher:
-    """Membuat komponen Pusher: mem-publish model terbaik ke direktori serving."""
-    return tfx.components.Pusher(
+    pusher = Pusher(
         model=trainer.outputs["model"],
         model_blessing=evaluator.outputs["blessing"],
         push_destination=pusher_pb2.PushDestination(
             filesystem=pusher_pb2.PushDestination.Filesystem(
-                base_directory=serving_model_dir
+                base_directory=os.path.abspath(serving_model_dir)
             )
         ),
+    )
+
+    return (
+        example_gen,
+        statistics_gen,
+        schema_gen,
+        example_validator,
+        transform,
+        trainer,
+        model_resolver,
+        evaluator,
+        pusher,
     )

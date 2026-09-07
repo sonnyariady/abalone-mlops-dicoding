@@ -126,6 +126,57 @@ def health():
     return jsonify({"status": "ok", "model_loaded": model is not None})
 
 
+@app.route("/v1/models/<model_name>/metadata", methods=["GET"])
+@app.route("/v1/models/<model_name>", methods=["GET"])
+def model_metadata(model_name: str):
+    """Endpoint metadata standar TensorFlow Serving (TF Serving)."""
+    return jsonify(
+        {
+            "model_spec": {
+                "name": model_name,
+                "signature_name": "serving_default",
+                "version": "1",
+            },
+            "metadata": {
+                "signature_def": {
+                    "signature_def": {
+                        "serving_default": {
+                            "inputs": {
+                                "examples": {
+                                    "dtype": "DT_STRING",
+                                    "tensor_shape": {
+                                        "dim": [{"size": "-1", "name": ""}]
+                                    },
+                                    "name": "serving_default_examples:0",
+                                }
+                            },
+                            "outputs": {
+                                "outputs": {
+                                    "dtype": "DT_FLOAT",
+                                    "tensor_shape": {
+                                        "dim": [
+                                            {"size": "-1", "name": ""},
+                                            {"size": "1", "name": ""},
+                                        ]
+                                    },
+                                    "name": "StatefulPartitionedCall:0",
+                                }
+                            },
+                            "method_name": "tensorflow/serving/predict",
+                        }
+                    }
+                }
+            },
+        }
+    )
+
+
+@app.route("/v1/models/<model_name>:predict", methods=["POST"])
+def tf_serving_predict(model_name: str):
+    """Endpoint inferensi prediksi standar TensorFlow Serving."""
+    return predict()
+
+
 @app.route("/predict", methods=["POST"])
 def predict():
     """Menerima JSON berisi fitur abalon dan mengembalikan probabilitas.

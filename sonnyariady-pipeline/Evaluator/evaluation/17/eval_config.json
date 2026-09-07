@@ -1,0 +1,55 @@
+{
+  "evalConfig": {
+    "modelSpecs": [
+      {
+        "name": "candidate",
+        "labelKey": "label"
+      },
+      {
+        "name": "baseline",
+        "labelKey": "label",
+        "isBaseline": true
+      }
+    ],
+    "slicingSpecs": [
+      {}
+    ],
+    "metricsSpecs": [
+      {
+        "metrics": [
+          {
+            "className": "ExampleCount"
+          },
+          {
+            "className": "BinaryAccuracy",
+            "threshold": {
+              "valueThreshold": {
+                "lowerBound": 0.5
+              }
+            }
+          },
+          {
+            "className": "AUC"
+          },
+          {
+            "className": "Precision"
+          },
+          {
+            "className": "Recall"
+          }
+        ],
+        "modelNames": [
+          "candidate",
+          "baseline"
+        ]
+      }
+    ]
+  },
+  "version": "0.45.0",
+  "dataLocation": "<user provided PCollection>",
+  "fileFormat": "<unknown>",
+  "modelLocations": {
+    "candidate": "C:/tfx_run\\sonnyariady-pipeline\\Trainer\\model\\16\\Format-Serving",
+    "baseline": "C:/tfx_run\\sonnyariady-pipeline\\Trainer\\model\\7\\Format-Serving"
+  }
+}

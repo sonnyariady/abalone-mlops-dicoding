@@ -1,10 +1,4 @@
-"""Modul Trainer TFX: ``run_fn`` untuk melatih model klasifikasi abalon.
-
-Model (DNN sederhana) dilatih pada fitur hasil transformasi, kemudian
-diekspor sebagai SavedModel dengan signature ``serving_default`` yang
-menerima serialized ``tf.Example`` dan menerapkan transformasi di dalam
-graph sehingga aman dipakai untuk serving (tanpa training-serving skew).
-"""
+"""Modul Trainer TFX: ``run_fn`` untuk melatih model klasifikasi abalon."""
 
 import os
 import sys
@@ -14,21 +8,20 @@ import tensorflow as tf
 import tensorflow_transform as tft
 from tfx_bsl.tfxio import dataset_options
 
-# Agar modul 'modules' dapat diimpor ketika file ini dimuat oleh executor TFX.
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from modules.data_processing import (  # noqa: E402  pylint: disable=wrong-import-position
+from modules.data_processing import (
     LABEL_KEY,
     RINGS_KEY,
     transformed_name,
 )
-from modules.model_building import build_keras_model  # noqa: E402  pylint: disable=wrong-import-position
-from modules.utils import set_seed  # noqa: E402  pylint: disable=wrong-import-position
+from modules.model_building import build_keras_model
+from modules.utils import set_seed
 
 _BATCH_SIZE = 64
-_EPOCHS = 20
+_EPOCHS = 15
 
 
 def _input_fn(
@@ -37,10 +30,7 @@ def _input_fn(
     tf_transform_output: tft.TFTransformOutput,
     batch_size: int = _BATCH_SIZE,
 ) -> tf.data.Dataset:
-    """Membuat dataset training/evaluasi dari contoh hasil transformasi.
-
-    Dataset berisi pasangan (fitur hasil transformasi, label).
-    """
+    """Membuat dataset training/evaluasi dari contoh hasil transformasi."""
     dataset = data_accessor.tf_dataset_factory(
         file_pattern,
         dataset_options.TensorFlowDatasetOptions(
@@ -63,17 +53,11 @@ def _input_fn(
             dense_features[k] = tf.reshape(dense_features[k], [-1, 1])
         return dense_features, label
 
-    return dataset.map(_to_dense)
+    return dataset.map(_to_dense).repeat()
 
 
 def _get_serve_tf_examples_fn(model: tf.keras.Model, tf_transform_output):
-    """Mengembalikan fungsi serving yang menerima serialized ``tf.Example``.
-
-    Fitur mentah di-parse, ditransformasi dengan graph tf.Transform, lalu
-    diprediksi oleh model. Fitur yang tidak diperlukan untuk inferensi
-    (label dan jumlah cincin) dibuang dari spec parsing.
-    """
-
+    """Mengembalikan fungsi serving yang menerima serialized tf.Example."""
     model.tft_layer_inference = tf_transform_output.transform_features_layer()
 
     @tf.function(
@@ -94,12 +78,7 @@ def _get_serve_tf_examples_fn(model: tf.keras.Model, tf_transform_output):
 
 
 def run_fn(fn_args):
-    """Melatih model dan mengekspor SavedModel untuk serving.
-
-    Args:
-        fn_args: argumen training dari komponen TFX Trainer
-            (berisi path data, transform graph, dan hyperparameter).
-    """
+    """Melatih model dan mengekspor SavedModel untuk serving."""
     set_seed()
 
     tf_transform_output = tft.TFTransformOutput(fn_args.transform_graph_path)
@@ -111,8 +90,6 @@ def run_fn(fn_args):
         fn_args.eval_files, fn_args.data_accessor, tf_transform_output
     )
 
-    # Gunakan hyperparameter terbaik hasil Tuner bila tersedia.
-    # (fn_args.hyperparameters adalah dict hasil konfigurasi KerasTuner.)
     hp = fn_args.hyperparameters
     hp_values = (hp or {}).get("values", {})
     learning_rate = hp_values.get("learning_rate", 1e-3)

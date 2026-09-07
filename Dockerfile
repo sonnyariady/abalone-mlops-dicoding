@@ -8,9 +8,10 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Install dependencies terlebih dahulu agar layer Docker dapat di-cache.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install dependencies serving terlebih dahulu agar layer Docker dapat di-cache.
+COPY requirements-server.txt requirements.txt* ./
+RUN if [ -f requirements-server.txt ]; then pip install --no-cache-dir -r requirements-server.txt; else pip install --no-cache-dir -r requirements.txt; fi
+
 
 # Salin aplikasi web dan model serving hasil TFX Pusher.
 COPY app.py .
