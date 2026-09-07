@@ -150,34 +150,33 @@ Evaluasi model dilakukan secara komprehensif menggunakan **TensorFlow Model Anal
 
 ## 8. Opsi Model Deployment
 
-Model di-deploy sebagai layanan **TensorFlow Serving (TF Serving)** di cloud container untuk melayani inferensi model abalone hasil Pusher:
+Model di-deploy sebagai layanan **TensorFlow Serving (TF Serving)** resmi menggunakan image container `tensorflow/serving:latest` di cloud Railway untuk melayani inferensi model abalone hasil komponen Pusher:
 
 | Endpoint | Metode | Deskripsi |
 |---|---|---|
 | `/v1/models/abalone-model/metadata` | `GET` | Informasi metadata model, input spec, dan output signature |
-| `/v1/models/abalone-model:predict` | `POST` | Prediksi klasifikasi usia abalon real-time (JSON payload) |
-| `/health` | `GET` | Health check ketersediaan model serving |
-| `/metrics` | `GET` | Eksposur metrik performa ke Prometheus |
+| `/v1/models/abalone-model:predict` | `POST` | Prediksi klasifikasi usia abalon real-time (REST API TF Serving) |
+| `/monitoring/prometheus/metrics` | `GET` | Eksposur metrik performa native TensorFlow Serving ke Prometheus |
 
 Langkah deployment:
-1. Model SavedModel hasil komponen Pusher (`serving_model/`) dimuat ke dalam container TensorFlow Serving.
-2. Container diekspos pada port serving (default: 8501) dan dipublikasikan ke penyedia komputasi cloud.
-3. Reviewer dapat mengakses langsung endpoint metadata model untuk memeriksa kesiapan status serving.
+1. Model SavedModel hasil komponen Pusher (`serving_model/`) dimuat ke dalam container TensorFlow Serving pada path `/models/abalone-model`.
+2. Konfigurasi monitoring protobuf (`monitoring/prometheus.config`) disematkan agar TF Serving mengekspos metrik ke path `/monitoring/prometheus/metrics`.
+3. Container diekspos pada port serving `${PORT}` dan dipublikasikan ke penyedia komputasi cloud (Railway).
+4. Reviewer dapat mengakses langsung endpoint metadata model untuk memeriksa kesiapan status serving.
 
 ## 9. Tautan Web App Model Serving
 
 - **Tautan model serving / metadata endpoint:** `https://abalone-mlops-dicoding-production.up.railway.app/v1/models/abalone-model/metadata`
-- **Tautan health check:** `https://abalone-mlops-dicoding-production.up.railway.app/health`
+- **Tautan metrik Prometheus TF Serving:** `https://abalone-mlops-dicoding-production.up.railway.app/monitoring/prometheus/metrics`
 - **Screenshot keberhasilan deployment:** `sonnyariady-deployment.png`
 
 ## 10. Hasil Monitoring
 
-Sistem dimonitor secara real-time menggunakan **Prometheus** yang melakukan *scraping* metrik dari endpoint `/metrics` setiap interval 15 detik (`monitoring/prometheus.config`):
+Sistem dimonitor secara real-time menggunakan **Prometheus** yang melakukan *scraping* metrik dari endpoint TF Serving `/monitoring/prometheus/metrics` setiap interval 5 detik (`monitoring/prometheus.yml`):
 
-- `predict_requests_total` — Total volume permintaan prediksi yang diterima.
-- `predict_errors_total` — Jumlah permintaan inferensi yang mengalami error.
-- `predict_latency_seconds` — Distribusi waktu respon / latensi inferensi model (histogram).
-- Metrik sistem proses (CPU usage, memory allocation, dan active worker threads).
+- `:tensorflow:serving:request_count` — Total volume permintaan prediksi yang diterima model abalone.
+- `:tensorflow:serving:request_latency` — Distribusi waktu respon / latensi inferensi model (histogram).
+- `:tensorflow:serving:runtime_latency` — Latensi eksekusi internal TensorFlow Serving engine.
 
 ### Ringkasan Hasil Observasi Monitoring:
 1. **Kehandalan & Error Rate:** Sepanjang pengujian trafik simulasi, sistem berhasil melayani seluruh permintaan prediksi dengan **error rate 0%** (`predict_errors_total = 0`), mengonfirmasi reliabilitas pipeline serving.

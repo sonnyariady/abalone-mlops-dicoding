@@ -1,27 +1,16 @@
-# ============================================================
-# Dockerfile - deployment sistem machine learning ke cloud
-# Platform: Heroku / Railway (atau container registry lain)
-# Username Dicoding: sonnyariady
-# ============================================================
+FROM tensorflow/serving:latest
 
-FROM python:3.10-slim
+COPY ./serving_model /models/abalone-model
+COPY ./monitoring /model_config
 
-WORKDIR /app
+ENV MODEL_NAME=abalone-model
+ENV MONITORING_CONFIG="/model_config/prometheus.config"
+ENV PORT=8501
 
-# Install dependencies serving terlebih dahulu agar layer Docker dapat di-cache.
-COPY requirements-server.txt requirements.txt* ./
-RUN if [ -f requirements-server.txt ]; then pip install --no-cache-dir -r requirements-server.txt; else pip install --no-cache-dir -r requirements.txt; fi
-
-
-# Salin aplikasi web dan model serving hasil TFX Pusher.
-COPY app.py .
-COPY serving_model ./serving_model
-
-# Jalankan sebagai user non-root (best practice keamanan).
-RUN useradd -m appuser && chown -R appuser:appuser /app
-USER appuser
-
-EXPOSE 8080
-
-# Heroku/Railway menyediakan variabel lingkungan PORT.
-CMD gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 4 --timeout 120 app:app
+RUN echo '#!/bin/bash \n\n\
+env \n\
+tensorflow_model_server --port=8500 --rest_api_port=${PORT} \
+--model_name=${MODEL_NAME} --model_base_path=${MODEL_BASE_PATH}/${MODEL_NAME} \
+--monitoring_config_file=${MONITORING_CONFIG} \
+"$@"' > /usr/bin/tf_serving_entrypoint.sh \
+&& chmod +x /usr/bin/tf_serving_entrypoint.sh

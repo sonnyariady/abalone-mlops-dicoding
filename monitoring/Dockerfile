@@ -5,8 +5,8 @@
 
 FROM prom/prometheus:v2.53.2
 
-# Salin konfigurasi Prometheus (scrape endpoint /metrics aplikasi ML).
-COPY prometheus.config /etc/prometheus/prometheus.yml
+# Salin konfigurasi Prometheus (scrape endpoint TF Serving).
+COPY prometheus.yml /etc/prometheus/prometheus.yml
 
 EXPOSE 9090
 
