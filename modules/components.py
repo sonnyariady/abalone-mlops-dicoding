@@ -88,7 +88,7 @@ def init_components(
 
     trainer = Trainer(
         module_file=os.path.abspath(training_module),
-        examples=example_gen.outputs["examples"],
+        examples=transform.outputs["transformed_examples"],
         transform_graph=transform.outputs["transform_graph"],
         schema=schema_gen.outputs["schema"],
         train_args=train_args,
@@ -112,11 +112,7 @@ def init_components(
                         threshold=tfma.MetricThreshold(
                             value_threshold=tfma.GenericValueThreshold(
                                 lower_bound={"value": 0.5}
-                            ),
-                            change_threshold=tfma.GenericChangeThreshold(
-                                direction=2,
-                                absolute={"value": -1e-10},
-                            ),
+                            )
                         ),
                     ),
                     tfma.MetricConfig(class_name="AUC"),

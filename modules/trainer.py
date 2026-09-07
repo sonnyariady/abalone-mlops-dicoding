@@ -53,7 +53,7 @@ def _input_fn(
             dense_features[k] = tf.reshape(dense_features[k], [-1, 1])
         return dense_features, label
 
-    return dataset.map(_to_dense)
+    return dataset.map(_to_dense).repeat()
 
 
 def _get_serve_tf_examples_fn(model: tf.keras.Model, tf_transform_output):
