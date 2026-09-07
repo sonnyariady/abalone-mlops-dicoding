@@ -122,39 +122,33 @@
         <tbody>
           <tr>
             <td><span class="mono">GET /v1/models/abalone-model/metadata</span></td>
-            <td>TF Serving Metadata (Signature & Input Spec)</td>
+            <td>TensorFlow Serving Model Metadata (SignatureDef & Input Spec)</td>
             <td><span class="status-tag status-200">200 OK</span></td>
-            <td>Sesuai catatan reviewer Dicoding</td>
+            <td>Sesuai kriteria wajib deployment TF Serving</td>
           </tr>
           <tr>
-            <td><span class="mono">GET /health</span></td>
-            <td><span class="mono">{"model_loaded": true, "status": "ok"}</span></td>
+            <td><span class="mono">POST /v1/models/abalone-model:predict</span></td>
+            <td>REST API Inferensi Prediksi Model TF Serving</td>
             <td><span class="status-tag status-200">200 OK</span></td>
-            <td>Model Serving Loaded & Healthy</td>
+            <td>Serving Default Signature Valid</td>
           </tr>
           <tr>
-            <td><span class="mono">POST /predict</span></td>
-            <td><span class="mono">{"predictions": [{"label": "dewasa", "prob": 0.537}]}</span></td>
+            <td><span class="mono">GET /monitoring/prometheus/metrics</span></td>
+            <td>Metrik Native TF Serving (:tensorflow:serving:request_count)</td>
             <td><span class="status-tag status-200">200 OK</span></td>
-            <td>Inferensi Prediksi Model Valid</td>
-          </tr>
-          <tr>
-            <td><span class="mono">GET /metrics</span></td>
-            <td>Metrik Prometheus (predict_requests_total, latency)</td>
-            <td><span class="status-tag status-200">200 OK</span></td>
-            <td>Scraping Prometheus Aktif</td>
+            <td>Scraping Prometheus TF Serving Aktif</td>
           </tr>
         </tbody>
       </table>
 
       <p style="font-size:12px; font-weight:600; color:#94a3b8; text-transform:uppercase; margin-bottom:8px;">
-        Respons JSON Metadata Model dari Railway (Live Response):
+        Respons JSON Metadata Model dari TensorFlow Serving di Railway (Live Response):
       </p>
       <pre class="json-preview">{
   "model_spec": {
     "name": "abalone-model",
-    "signature_name": "serving_default",
-    "version": "1"
+    "version": "1788753950",
+    "signature_name": ""
   },
   "metadata": {
     "signature_def": {
@@ -162,16 +156,16 @@
         "serving_default": {
           "inputs": {
             "examples": {
-              "dtype": "DT_STRING",
               "name": "serving_default_examples:0",
-              "tensor_shape": { "dim": [{ "name": "", "size": "-1" }] }
+              "dtype": "DT_STRING",
+              "tensor_shape": { "dim": [{ "size": "-1", "name": "" }], "unknown_rank": false }
             }
           },
           "outputs": {
             "outputs": {
+              "name": "StatefulPartitionedCall_3:0",
               "dtype": "DT_FLOAT",
-              "name": "StatefulPartitionedCall:0",
-              "tensor_shape": { "dim": [{ "name": "", "size": "-1" }, { "name": "", "size": "1" }] }
+              "tensor_shape": { "dim": [{ "size": "-1", "name": "" }, { "size": "1", "name": "" }], "unknown_rank": false }
             }
           },
           "method_name": "tensorflow/serving/predict"
