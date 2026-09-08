@@ -1,19 +1,23 @@
-# Proyek Akhir MLOps — Sistem Machine Learning End-to-End: Prediksi Usia Abalon
+# Submission 2: Sistem Machine Learning End-to-End Prediksi Usia Abalon
 
-**Username Dicoding:** `sonnyariady`
+Nama: Sonny Ariady
+Username dicoding: sonnyariady
 
-Proyek akhir kelas **Machine Learning Operations (MLOps)** — Dicoding. Proyek ini membangun dan menjalankan sistem *machine learning* end-to-end untuk menyelesaikan masalah bisnis: memprediksi kategori usia abalon secara otomatis dari pengukuran fisik cangkangnya.
-
-| Aspek | Detail |
-|---|---|
-| Dataset | Abalone Data Set (UCI Machine Learning Repository) — 4.177 baris |
-| Masalah bisnis | Menentukan usia abalon (dewasa/muda) tanpa pembedahan cangkang |
-| Solusi | Klasifikasi biner dengan DNN, pipeline TFX |
-| Orchestrator | Apache Beam (BeamDagRunner) |
-| Deployment | Flask + Docker → Heroku / Railway |
-| Monitoring | Prometheus + Grafana |
+| | Deskripsi |
+| --- | --- |
+| Dataset | Abalone Data Set (UCI Machine Learning Repository) — 4.177 baris data pengukuran fisik kerang abalon untuk memprediksi kategori usia. |
+| Masalah | Penentuan usia abalon secara konvensional memerlukan pemotongan cangkang dan penghitungan cincin di bawah mikroskop yang merusak sampel, memakan waktu, dan mahal. Diperlukan solusi otomasi untuk memprediksi kategori usia (dewasa vs muda) hanya dari karakteristik fisik tanpa pembedahan. |
+| Solusi machine learning | Membangun sistem klasifikasi biner berbasis Deep Neural Network (DNN) menggunakan pipeline end-to-end TensorFlow Extended (TFX) yang mengintegrasikan tahapan ingest data, validasi skema data, transformasi fitur, hyperparameter tuning, training, evaluasi berbasis ambang batas (blessing), hingga model pushing dan deployment serving. |
+| Metode pengolahan | Rekayasa data awal untuk penamaan kolom dan pembentukan label biner (`label = 1` jika `Rings > 9` [dewasa], dan `0` [muda]). Preprocessing fitur menggunakan TensorFlow Transform (`tft`) untuk mencegah *training-serving skew*: fitur kategorikal (`Sex`) dikonversi ke indeks vocabulary (`tft.compute_and_apply_vocabulary`), 7 fitur numerik distandarisasi dengan z-score (`tft.scale_to_z_score`). Pembagian data train dan eval (80:20) dilakukan secara deterministik via hash-bucket pada ExampleGen. |
+| Arsitektur model | Arsitektur Deep Neural Network (DNN) terintegrasi tf.Transform: Input layer memproses fitur kategorikal tertransformasi melalui Embedding layer (8 dimensi) serta 7 fitur numerik terstandarisasi, digabungkan via Concatenate layer, dialirkan ke 2 Hidden Dense layer dengan aktivasi ReLU dan Dropout untuk regularisasi, diakhiri dengan Dense layer 1 unit beraktivasi Sigmoid untuk probabilitas kelas dewasa. Hyperparameter dioptimasi otomatis menggunakan KerasTuner (komponen Tuner). |
+| Metrik evaluasi | Evaluasi model dilakukan menggunakan TensorFlow Model Analysis (TFMA) pada komponen Evaluator dengan metrik: BinaryAccuracy, AUC (Area Under ROC Curve), Precision, Recall, dan ExampleCount. Evaluator juga menguji ambang batas validasi (blessing) minimal akurasi ≥ 75% dan AUC ≥ 80% sebelum model diizinkan di-push. |
+| Performa model | Model berhasil lolos validasi Evaluator (**BLESSED**) pada 880 sampel data evaluasi dengan performa: BinaryAccuracy mencapai **79.77%** (target ≥ 75%), AUC mencapai **87.06%** (target ≥ 80%), Precision **78.88%**, Recall **80.69%**, dan status model siap produksi (*Pushed*). |
+| Opsi deployment | Model di-deploy menggunakan container image resmi TensorFlow Serving (`tensorflow/serving:latest`) pada platform cloud Railway. Container melayani inferensi REST API pada port yang diekspos serta menyediakan endpoint metadata model dan eksposur metrik native untuk Prometheus. |
+| Web app | Tautan web app / model serving: `https://abalone-mlops-dicoding-production.up.railway.app/v1/models/abalone-model/metadata` (Endpoint metadata model aktif di Railway) dan `https://abalone-mlops-dicoding-production.up.railway.app/v1/models/abalone-model:predict` (Endpoint REST API inferensi). |
+| Monitoring | Pemantauan sistem secara berkala dan real-time menggunakan Prometheus dan Grafana dengan scraping metrik native TensorFlow Serving dari endpoint `/monitoring/prometheus/metrics`. Parameter yang dipantau meliputi request throughput (`:tensorflow:serving:request_count`), latensi inferensi p50 18–32 ms dan p99 < 65 ms (`:tensorflow:serving:runtime_latency`), error rate 0%, serta stabilitas penggunaan CPU (< 10%) dan memori (140–180 MB). |
 
 ---
+
 
 ## Daftar Isi
 
